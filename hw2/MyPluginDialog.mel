@@ -1,0 +1,74 @@
+global proc string loadText()
+{
+    string $basicFilter = "*.txt";
+    string $result[] = `fileDialog2 -fileFilter $basicFilter -dialogStyle 1 -fileMode 0`;
+    string $filename = $result[0]; 
+    int $fileId = `fopen $filename "r"`;
+    string $data = "";
+    string $nl = `fgetline $fileId`;
+    while (size($nl) > 0)
+    {
+        $data = $data + $nl;
+        $nl = `fgetline $fileId`;
+    }
+	scrollField -edit -text $data "scrollfield";
+	fclose $fileId;
+	return $data;
+}
+
+global proc createLSystem(string $grammar) 
+{
+	float $step = `floatSliderGrp -q -v stepSlider`;
+	float $angle = `floatSliderGrp -q -v degSlider`;
+	int $iter = `floatSliderGrp -q -v iterSlider`;
+	LSystemCmd -s $step -d $angle -g $grammar -n $iter;
+}
+
+global proc setWindow() 
+{
+	global string $grammar;
+	float $step_size;
+	float $angle_degree;
+	int $iter_num;
+
+	string $window = `window -title "Call LSystem Command" -widthHeight 600 600 -titleBar true`;
+	frameLayout -label "Browse for grammar files";
+		button -label "Browse" -width 10 -height 10 -align "right" -command ("$grammar = loadText()");
+		scrollField -wordWrap true -text "The grammar shows here!" "scrollfield";
+	setParent ..;
+
+	frameLayout -label "LSystem Parameters" -collapsable true -collapse false;
+		columnLayout; 
+			$iter_num = `floatSliderGrp -label "Iterations" -field true -minValue 0.0 -maxValue 100.0 iterSlider`;
+			$step_size = `floatSliderGrp -label "Default Step Size" -field true -minValue 0.0 -maxValue 100.0 stepSlider`;
+			$angle_degree = `floatSliderGrp -label "Default Angle" -field true -minValue 0.0 -maxValue 100.0 degSlider`; 
+		setParent ..;
+	setParent ..;
+
+	
+	frameLayout -label "Create or Cancel";
+		rowLayout -numberOfColumns 2 -columnWidth2 100 100;
+			button -label "Create" -width 100 -height 30 -align "left" -command ("createLSystem($grammar)");
+			button -label "Cancel" -width 100 -height 30 -align "right" -command ("deleteUI -window " + $window);
+		setParent ..;
+	setParent ..;
+	showWindow;
+};
+
+global proc createNode()
+{
+	// copied from instructions
+	createNode transform -n LSystem1;
+	createNode mesh -n LSystemShape1 -p LSystem1;
+	sets -add initialShadingGroup LSystemShape1;
+	createNode LSystemNode -n LSystemNode1;
+	connectAttr time1.outTime LSystemNode1.time;
+	connectAttr LSystemNode1.outputMesh LSystemShape1.inMesh;
+
+}
+
+global string $gMainWindow;
+setParent $gMainWindow;
+menu -label"L-System menu" -p $gMainWindow -tearOff on;
+menuItem -label "L-System command" -command ("setWindow");
+menuItem -label "L-System node" -command ("createNode");
