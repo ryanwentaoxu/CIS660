@@ -1,0 +1,57 @@
+global proc option1()
+{
+	polySphere;
+	instancer;
+	createNode randomNode;
+	connectAttr pSphere1.matrix instancer1.inputHierarchy[0];
+	connectAttr randomNode1.outPoints instancer1.inputPoints;
+}
+
+global proc option2()
+{
+	// create the object at first
+	string $obj_selected[] = `ls -sl`;
+	$selected = $obj_selected[0];
+    instancer;
+    createNode randomNode;
+    connectAttr ($selected+".matrix") instancer1.inputHierarchy[0]; 
+    connectAttr randomNode1.outPoints instancer1.inputPoints; 
+}
+
+global proc option3()
+{
+	polySphere;
+	polyCube;
+	// two instances
+	instancer;
+	instancer;
+	// one LSystemInstancerNode
+	createNode LSystemInstancerNode;
+	connectAttr pCube1.matrix instancer1.inputHierarchy[0];
+	connectAttr LSystemInstancerNode1.outBranches instancer1.inputPoints;
+	connectAttr pSphere1.matrix instancer2.inputHierarchy[0];
+	connectAttr LSystemInstancerNode1.outFlowers instancer2.inputPoints;
+}
+
+global proc option4()
+{
+	string $obj_selected[] = `ls -sl`;
+	$selected = $obj_selected;
+	$brch = $selected[0];
+	$flwr = $selected[1];
+	instancer;
+	instancer;
+	createNode LSystemInstancerNode;
+	connectAttr ($brch + ".matrix") instancer1.inputHierarchy[0];
+	connectAttr LSystemInstancerNode1.outBranches instancer1.inputPoints;
+	connectAttr ($flwr+".matrix") instancer2.inputHierarchy[0];
+	connectAttr LSystemInstancerNode1.outFlowers instancer2.inputPoints;
+}
+
+global string $gMainWindow;
+setParent $gMainWindow;
+menu -label "LSystemInstancer" -p $gMainWindow -tearOff true;
+menuItem -label "option1: create a randomNode network" -command ("option1");
+menuItem -label "option2: create a randomNode network with selected geom" -command ("option2");
+menuItem -label "option3: create poly, sphere, 2 instancers, 1 instancerNode" -command ("option3");
+menuItem -label "option4: create selected network" -command ("option4");
